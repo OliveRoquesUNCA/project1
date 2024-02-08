@@ -1,0 +1,13 @@
+dist
+.parcel-cache
+.env
+node_modules/
+.vscode/
+
+# Python
+.venv/
+__pycache__/
+
+# Emacs
+\#*\#
+*~
