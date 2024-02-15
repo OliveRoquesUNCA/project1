@@ -7,10 +7,11 @@ set -e
 set -x
 
 # The `-w "\n"' argument adds a new line to the end of curl's output
-curl -w "\n" localhost:8000/api/v1/deal
+# curl -w "\n" localhost:8000/api/v1/deal
 curl -w "\n" -X POST localhost:8000/api/v2/deck/new
 curl -w "\n" localhost:8000/api/v2/deck/123
 curl -w "\n" -X POST localhost:8000/api/v2/deck/123/deal?count=4
+curl -w "\n" -X POST localhost:8000/api/v2/deck/123/restart-game
 
 # You may want to parse the resulting JSON. The `jq` command is good
 # for that. You can install it with `apt` in Linux or homebrew in
