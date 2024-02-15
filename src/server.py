@@ -63,7 +63,7 @@ async def api_v2_deck(deck_id: str):
 
 #returns cards equal to given count from the top of the deck
 #TODO: check for valid deals
-@app.post("/api/v2/deck/{deck_id}/deal")
+@app.post("/api/v2/deck/{deck_id}/deal/{count}")
 async def api_v2_deck_deal(deck_id: str, count: int):
     if(deck_id not in deck_objects):
         raise HTTPException(status_code=404, detail=f"Deck {deck_id} not found")
