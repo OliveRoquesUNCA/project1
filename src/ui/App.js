@@ -1,6 +1,7 @@
 import Api from "./Api.js";
+import { Deck, DeckExpiredError } from "./Deck.js";
 import Hand from "./Hand.js";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 
 /**
    Note: For each game, we'll only allow the "Draw" to happen once.
@@ -8,15 +9,57 @@ import { useState, useCallback } from "react";
    Better yet, let's change it to a different "Play Again" button that
    resets everything and plays another hand (with a new Deck).
 **/
-export default function App({ initialCards }) {
+export default function App({ initialCards, initialDeck, initialEnded }) {
   const [cards, setCards] = useState(initialCards);
   const [selected, setSelected] = useState([]);
+  const [deck, setDeck] = useState(initialDeck);
+  const [dealt, setDealt] = useState(initialEnded);
+  const [error, setError] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+  console.log("initialDeck: " + initialDeck);
+  console.log("current deck: " + deck);
+  console.log("setDeck? " + setDeck);
+
+  useEffect(() => {
+    if (error) {
+      // restart from scratch
+      let d = new Deck();
+      d.init().then((result) => {
+        d.setSessionStorage();
+        setCards(result);
+        setDeck(d);
+        setError(false);
+      });
+      setSelected([]);
+      setDealt(false);
+    }
+  }, [initialCards, initialDeck, cards, selected, deck, dealt, error]);
+
+  useEffect(() => {
+    if (!error) {
+      console.log("storing deck: " + deck.deckId);
+      console.log(deck.expiry);
+      deck.setSessionStorage();
+      sessionStorage.setItem("hand", JSON.stringify(cards));
+      sessionStorage.setItem("dealt", JSON.stringify(dealt));
+    }
+  }, [initialCards, initialDeck, cards, selected, deck, dealt, error]);
 
   function toggleSelected(index) {
-    if (!selected.includes(index)) {
-      setSelected(selected.concat([index]));
-    } else {
+    if (dealt) {
+      setSelected([]);
+      return;
+    }
+    const newSelected = selected.concat([index]);
+    const remaining = [0, 1, 2, 3, 4].filter((e) => !newSelected.includes(e));
+    if (
+      (selected.length >= 3 &&
+        (remaining.length == 0 || cards[remaining[0]].rank !== "A")) ||
+      selected.includes(index)
+    ) {
       setSelected(selected.filter((elt) => elt !== index));
+    } else {
+      setSelected(newSelected);
     }
   }
 
@@ -25,23 +68,15 @@ export default function App({ initialCards }) {
     console.log(`need to fetch ${selected.length} cards`);
 
     // fetch the new cards
-    const fetchedCards = await Promise.all(
-      /**
-         This is some wacky functional programming magic. It's bad
-         code, but you should practice understanding it.  Essentially,
-         we're creating a new array of the appropriate length, then
-         mapping over it to create an array of Promises, which we then
-         await.
-
-         Once API v2 is created, we can delete this and change it to a
-         much simpler single API call that specifies the number of
-         cards we want dealt.
-       **/
-      Array.from(Array(selected.length).keys()).map((arg, index) => {
-        return Api.deal();
-      }),
-    );
-
+    let fetchedCards;
+    try {
+      fetchedCards = await deck.deal(selected.length);
+    } catch (e) {
+      console.log(e);
+      setErrorMsg(e.message);
+      setError(true);
+      return;
+    }
     // let's print out the fetched cards
     console.log(fetchedCards);
 
@@ -61,7 +96,42 @@ export default function App({ initialCards }) {
     // update state, causing a re-render
     setCards(newCards);
     setSelected([]);
-  }, [selected, cards]);
+    setDeck(deck.clone());
+    setDealt(true);
+    setError(false);
+    setErrorMsg("");
+  }, [selected, deck, cards, error]);
+
+  const restartGame = useCallback(async () => {
+    try {
+      let cards = await deck.restart();
+      setCards(cards);
+      setDeck(deck.clone());
+      setDealt(false);
+      setSelected([]);
+    } catch (e) {
+      console.log(e);
+      setErrorMsg(e.message);
+      setError(true);
+      return;
+    }
+  }, [cards, deck, error]);
+
+  const dealButton = dealt ? (
+    ""
+  ) : (
+    <button onClick={async () => fetchNewCards(selected)}>Draw</button>
+  );
+  const errorDisplay = errorMsg ? (
+    <p>An error occurred. {errorMsg}. Restarting game.</p>
+  ) : (
+    ""
+  );
+  const restartGameButton = dealt ? (
+    <button onClick={async () => restartGame()}>Restart</button>
+  ) : (
+    ""
+  );
 
   return (
     <div>
@@ -70,7 +140,9 @@ export default function App({ initialCards }) {
         selected={selected}
         onSelect={(index) => toggleSelected(index)}
       />
-      <button onClick={async () => fetchNewCards(selected)}>Draw</button>
+      {dealButton}
+      {errorDisplay}
+      {restartGameButton}
     </div>
   );
 }
