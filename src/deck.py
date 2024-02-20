@@ -8,7 +8,6 @@ RANKS = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"]
 CARDS = [Card(rank=r, suit=s) for r in RANKS for s in SUITS]
 
 
-# TODO: implement ranking
 @dataclass
 class Deck:
     cards: list[Card] = field(
