@@ -29,11 +29,11 @@ export default function App({ initialCards, initialDeck, initialEnded }) {
         setCards(result);
         setDeck(d);
         setError(false);
+        setSelected([]);
+        setDealt(false);
       });
-      setSelected([]);
-      setDealt(false);
     }
-  }, [initialCards, initialDeck, cards, selected, deck, dealt, error]);
+  }, [error]);
 
   useEffect(() => {
     if (!error) {
