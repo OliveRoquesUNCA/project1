@@ -34,3 +34,13 @@ services:
       interval: 10s
     env_file: ".env"
     entrypoint: npm run watch
+  test_script:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./src:/app
+    working_dir: /app
+    command: ["./test.sh"]
+    network_mode: "host"
+

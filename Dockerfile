@@ -12,5 +12,10 @@ WORKDIR /app
 RUN getent group ${GID} || groupadd -g ${GID} dev
 RUN getent passwd ${UID} || useradd -m -u ${UID} -g ${GID} -s /bin/bash dev
 RUN pip install poetry
+
+RUN apt-get update && apt-get install -y jq
+
 RUN poetry install
+
 CMD ["poetry", "run", "uvicorn", "server:app", "--host", "0.0.0.0"]
+
