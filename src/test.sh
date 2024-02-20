@@ -10,6 +10,7 @@ deck_id=$(curl -s -X POST localhost:8000/api/v2/deck/new | jq -r '.deck_id')
 curl -w "\n" localhost:8000/api/v2/deck/$deck_id | jq -r '.cards, .top'
 curl -w "\n" -X POST localhost:8000/api/v2/deck/$deck_id/deal/4 | jq -r '.cards'
 curl -w "\n" -X POST localhost:8000/api/v2/deck/$deck_id/restart-game | jq -r '.hand, .expires'
+curl -w "\n" localhost:8000/api/v2/deck/get-ranking?cards=2C,3C,4C,5C,6C | jq -r '.ranking'
 
 # The `-w "\n"' argument adds a new line to the end of curl's output
 
