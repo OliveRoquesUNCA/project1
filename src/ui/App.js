@@ -45,23 +45,26 @@ export default function App({ initialCards, initialDeck, initialEnded }) {
     }
   }, [initialCards, initialDeck, cards, selected, deck, dealt, error]);
 
-  function toggleSelected(index) {
-    if (dealt) {
-      setSelected([]);
-      return;
-    }
-    const newSelected = selected.concat([index]);
-    const remaining = [0, 1, 2, 3, 4].filter((e) => !newSelected.includes(e));
-    if (
-      (selected.length >= 3 &&
-        (remaining.length == 0 || cards[remaining[0]].rank !== "A")) ||
-      selected.includes(index)
-    ) {
-      setSelected(selected.filter((elt) => elt !== index));
-    } else {
-      setSelected(newSelected);
-    }
-  }
+  const toggleSelected = useCallback(
+    (index) => {
+      if (dealt) {
+        setSelected([]);
+        return;
+      }
+      const newSelected = selected.concat([index]);
+      const remaining = [0, 1, 2, 3, 4].filter((e) => !newSelected.includes(e));
+      if (
+        (selected.length >= 3 &&
+          (remaining.length == 0 || cards[remaining[0]].rank !== "A")) ||
+        selected.includes(index)
+      ) {
+        setSelected(selected.filter((elt) => elt !== index));
+      } else {
+        setSelected(newSelected);
+      }
+    },
+    [dealt, selected],
+  );
 
   // This function will be called when the Draw button is clicked
   const fetchNewCards = useCallback(async () => {
